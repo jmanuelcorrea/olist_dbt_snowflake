@@ -1,0 +1,12 @@
+olist_snowflake:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: not_used
+      user: not_used
+      role: role_transformer
+      warehouse: wh_olist_lab
+      database: olist_analytics
+      schema: dev
+      threads: 4

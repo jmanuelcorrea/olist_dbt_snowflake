@@ -1,0 +1,89 @@
+version: 2
+
+models:
+  # Clientes: customer_id debe ser único y no nulo (hay un customer_id por pedido).
+  - name: stg_olist__customers
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+
+  # Pedidos: llave única, cliente existente y estados dentro de la lista esperada.
+  - name: stg_olist__orders
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_olist__customers')
+                field: customer_id
+      - name: order_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['delivered', 'shipped', 'canceled', 'unavailable', 'invoiced', 'processing', 'created', 'approved']
+
+  # Líneas de pedido: cada línea debe apuntar a un pedido, un producto y un vendedor que existan.
+  - name: stg_olist__order_items
+    columns:
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_olist__orders')
+                field: order_id
+      - name: product_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_olist__products')
+                field: product_id
+      - name: seller_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_olist__sellers')
+                field: seller_id
+
+  # Pagos: cada pago debe pertenecer a un pedido que exista.
+  - name: stg_olist__order_payments
+    columns:
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_olist__orders')
+                field: order_id
+
+  # Reseñas: review_id no nulo; la unicidad se marca como advertencia (severity: warn) porque se sospecha que hay duplicados.
+  - name: stg_olist__order_reviews
+    columns:
+      - name: review_id
+        data_tests:
+          - not_null
+      - name: review_order_id
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_olist__orders')
+                field: order_id
+
+  # Productos: llave única y no nula.
+  - name: stg_olist__products
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+
+  # Vendedores: llave única y no nula.
+  - name: stg_olist__sellers
+    columns:
+      - name: seller_id
+        data_tests: [unique, not_null]
